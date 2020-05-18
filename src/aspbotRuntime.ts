@@ -4,6 +4,7 @@
 
 import { readFileSync } from 'fs';
 import { EventEmitter } from 'events';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 
 export interface MockBreakpoint {
@@ -59,6 +60,42 @@ export class AspBotRuntime extends EventEmitter {
 				_self.sendEvent('stopOnBreakpoint');
 			}
 
+			if (evt.data.indexOf("\"output\":")>=0){
+				var _output=JSON.parse(evt.data);
+				_self.sendEvent('output',_output.output,_self.sourceFile,_output.line+1);
+			}
+
+			if (evt.data.indexOf("\"vars\":")>=0){
+				var _output=JSON.parse(evt.data);
+				_self.variables=[];
+				if (_output.vars){
+					_output.vars.forEach(element => {
+						var ttype="string";
+						if (element.DataType=="number") ttype="float";
+						if (element.DataType!="json"){
+							_self.variables.push({
+								name:element.Name,
+								type:ttype,
+								value:String(element.Value),
+								variablesReference:0
+							});
+						} else {
+							try {
+								_self.variables.push({
+									name:element.Name,
+									type:"object",
+									value: JSON.stringify(JSON.parse(String(element.Value))),
+									variablesReference:0
+								});
+							} catch (error) {
+
+							}
+						}
+
+					});
+				}
+			}
+
 			if (evt.data.indexOf("\"end\":")>=0){
 				_self.sendEvent('end');
 			}
@@ -72,6 +109,11 @@ export class AspBotRuntime extends EventEmitter {
 				if (_self.ws.readyState===_self.ws.CLOSED) _self.connectWs();
 			},1000);
 		}
+	}
+
+	private variables: DebugProtocol.Variable[] = [];
+	public getVariables(){
+		return this.variables;
 	}
 
 	/**

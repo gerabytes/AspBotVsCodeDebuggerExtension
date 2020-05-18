@@ -17,7 +17,7 @@ const runMode: 'external' | 'server' | 'inline' = 'inline';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.getProgramName', config => {
+	context.subscriptions.push(vscode.commands.registerCommand('extension.aspbot-debug.getProgramName', config => {
 		return vscode.window.showInputBox({
 			placeHolder: "Please enter the name of a markdown file in the workspace folder",
 			value: "readme.md"
@@ -73,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
 			break;
 		}
 
-	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('mock', factory));
+	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('aspbot', factory));
 	if ('dispose' in factory) {
 		context.subscriptions.push(factory);
 	}

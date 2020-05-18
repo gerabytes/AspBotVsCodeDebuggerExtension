@@ -54,8 +54,8 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onDebugDynamicConfigurations:mock",
-		"onCommand:extension.mock-debug.getProgramName"
+		"onDebugDynamicConfigurations:aspbot",
+		"onCommand:extension.aspbot-debug.getProgramName"
 	],
 	"contributes": {
 		"breakpoints": [
@@ -116,7 +116,7 @@
 					}
 				],
 				"variables": {
-					"AskForProgramName": "extension.mock-debug.getProgramName"
+					"AskForProgramName": "extension.aspbot-debug.getProgramName"
 				}
 			}
 		]

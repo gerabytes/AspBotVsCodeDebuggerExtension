@@ -325,6 +325,10 @@ export class AspBotDebugSession extends LoggingDebugSession {
 		response.body = {
 			variables: variables
 		};
+
+		response.body = {
+			variables: this._runtime.getVariables()
+		};
 		this.sendResponse(response);
 	}
 
@@ -420,6 +424,20 @@ export class AspBotDebugSession extends LoggingDebugSession {
 			result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
 			variablesReference: 0
 		};
+
+		var vars=this._runtime.getVariables();
+		var resp="";
+		vars.forEach(_v => {
+			if (_v.name==args.expression){
+				resp=_v.value
+			};
+		});
+
+		response.body = {
+			result: resp,
+			variablesReference: 0
+		};
+
 		this.sendResponse(response);
 	}
 
