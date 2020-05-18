@@ -427,11 +427,16 @@ export class AspBotDebugSession extends LoggingDebugSession {
 
 		var vars=this._runtime.getVariables();
 		var resp="";
-		vars.forEach(_v => {
-			if (_v.name==args.expression){
-				resp=_v.value
-			};
-		});
+		if (args.expression.startsWith("<")){
+			this._runtime.RunScript(args.expression);
+		} else {
+			vars.forEach(_v => {
+				if (_v.name==args.expression){
+					resp=_v.value
+				};
+			});
+		}
+
 
 		response.body = {
 			result: resp,
@@ -554,6 +559,9 @@ export class AspBotDebugSession extends LoggingDebugSession {
 			this._cancelledProgressId= args.progressId;
 		}
 	}
+
+
+
 
 	//---- helpers
 

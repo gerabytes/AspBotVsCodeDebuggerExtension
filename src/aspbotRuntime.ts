@@ -116,6 +116,11 @@ export class AspBotRuntime extends EventEmitter {
 		return this.variables;
 	}
 
+	public RunScript(script:string){
+		var wscmdStart={cmd:'runscript',script:script,refresh:false};
+		 this.ws.send(JSON.stringify(wscmdStart));
+	}
+
 	/**
 	 * Start executing the given program.
 	 */
@@ -131,7 +136,7 @@ export class AspBotRuntime extends EventEmitter {
 		 this._currentLine = -1;
 		 this.continue();
 
-		var wscmdStart={cmd:'runscript',script:_self._sourceText};
+		var wscmdStart={cmd:'runscript',script:_self._sourceText,refresh:true};
 		 _self.ws.send(JSON.stringify(wscmdStart));
 		 this.continue();
 
