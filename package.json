@@ -1,7 +1,7 @@
 {
 	"name": "aspbot-debug",
 	"displayName": "AspBot Debug",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"publisher": "Gerabytes",
 	"description": "AspBot VsCode Debugger Extension",
 	"author": {
