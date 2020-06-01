@@ -25,6 +25,8 @@ function timeout(ms: number) {
  * The interface should always match this schema.
  */
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+	abRunnerPath: string | undefined;
+	websocketPort: number | undefined;
 	/** An absolute path to the "program" to debug. */
 	program: string;
 	/** Automatically stop target after launch. If not specified, target does not stop. */
@@ -166,7 +168,7 @@ export class AspBotDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		this._runtime.start(args.program, !!args.stopOnEntry);
+		this._runtime.start(args.program, !!args.stopOnEntry,args.websocketPort,false,args.abRunnerPath);
 
 		this.sendResponse(response);
 	}

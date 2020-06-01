@@ -43,49 +43,50 @@ export class AspBotRuntime extends EventEmitter {
 
 	constructor() {
 		super();
-		this.connectWs();
-
 	}
 
-	public connectWs(){
-		var _self=this;
-		var WebSocket= require("websocket").w3cwebsocket;
-		_self.ws=new WebSocket("ws://127.0.0.1:8899");
-		_self.ws.onmessage=function (evt){
-			console.log(evt.data);
-			if (evt.data.indexOf("\"step\":")>=0){
-				var step=JSON.parse(evt.data);
+	public WebSocketPort = 8899;
+	public connectWs() {
+		var _self = this;
 
-				_self._currentLine=parseInt(step.ln)-1;
+
+		var WebSocket = require("websocket").w3cwebsocket;
+		_self.ws = new WebSocket("ws://127.0.0.1:" + this.WebSocketPort);
+		_self.ws.onmessage = function (evt) {
+			console.log(evt.data);
+			if (evt.data.indexOf("\"step\":") >= 0) {
+				var step = JSON.parse(evt.data);
+
+				_self._currentLine = parseInt(step.ln) - 1;
 				_self.sendEvent('stopOnBreakpoint');
 			}
 
-			if (evt.data.indexOf("\"output\":")>=0){
-				var _output=JSON.parse(evt.data);
-				_self.sendEvent('output',_output.output,_self.sourceFile,_output.line+1);
+			if (evt.data.indexOf("\"output\":") >= 0) {
+				var _output = JSON.parse(evt.data);
+				_self.sendEvent('output', _output.output, _self.sourceFile, _output.line + 1);
 			}
 
-			if (evt.data.indexOf("\"vars\":")>=0){
-				var _output=JSON.parse(evt.data);
-				_self.variables=[];
-				if (_output.vars){
+			if (evt.data.indexOf("\"vars\":") >= 0) {
+				var _output = JSON.parse(evt.data);
+				_self.variables = [];
+				if (_output.vars) {
 					_output.vars.forEach(element => {
-						var ttype="string";
-						if (element.DataType=="number") ttype="float";
-						if (element.DataType!="json"){
+						var ttype = "string";
+						if (element.DataType == "number") ttype = "float";
+						if (element.DataType != "json") {
 							_self.variables.push({
-								name:element.Name,
-								type:ttype,
-								value:String(element.Value),
-								variablesReference:0
+								name: element.Name,
+								type: ttype,
+								value: String(element.Value),
+								variablesReference: 0
 							});
 						} else {
 							try {
 								_self.variables.push({
-									name:element.Name,
-									type:"object",
+									name: element.Name,
+									type: "object",
 									value: JSON.stringify(JSON.parse(String(element.Value))),
-									variablesReference:0
+									variablesReference: 0
 								});
 							} catch (error) {
 
@@ -96,49 +97,60 @@ export class AspBotRuntime extends EventEmitter {
 				}
 			}
 
-			if (evt.data.indexOf("\"end\":")>=0){
+			if (evt.data.indexOf("\"end\":") >= 0) {
 				_self.sendEvent('end');
 			}
 		};
-		_self.ws.onerror=function (evt){
+		_self.ws.onerror = function (evt) {
 			console.log(evt);
 		}
-		_self.ws.onclose=function (evt){
+		_self.ws.onclose = function (evt) {
 			console.log(evt);
-			setTimeout(function (){
-				if (_self.ws.readyState===_self.ws.CLOSED) _self.connectWs();
-			},1000);
+			setTimeout(function () {
+				if (_self.ws.readyState === _self.ws.CLOSED) _self.connectWs();
+			}, 1000);
 		}
 	}
 
 	private variables: DebugProtocol.Variable[] = [];
-	public getVariables(){
+	public getVariables() {
 		return this.variables;
 	}
 
-	public RunScript(script:string){
-		var wscmdStart={cmd:'runscript',script:script,refresh:false};
-		 this.ws.send(JSON.stringify(wscmdStart));
+	public RunScript(script: string) {
+		var wscmdStart = { cmd: 'runscript', script: script, refresh: false };
+		this.ws.send(JSON.stringify(wscmdStart));
 	}
 
 	/**
 	 * Start executing the given program.
 	 */
-	public start(program: string, stopOnEntry: boolean) {
-		var _self=this;
-		if (_self.ws.readyState!=_self.ws.OPEN) {
-			setTimeout(function (){
-				_self.start(program,stopOnEntry);
-			},1000);
+	public start(program: string, stopOnEntry: boolean, websocketPort: number = 8899, onretry = false,abrunnerPath="C:\\abdebugger\\abdebugger.exe") {
+		var _self = this;
+		_self.WebSocketPort = websocketPort;
+
+		if (!onretry) {
+			var exec = require('child_process').exec;
+			exec(abrunnerPath+ ' ' + websocketPort, function callback(error, stdout, stderr) {
+				// result
+			});
+
+			this.connectWs();
+		}
+
+		if (_self.ws.readyState != _self.ws.OPEN) {
+			setTimeout(function () {
+				_self.start(program, stopOnEntry, websocketPort,!onretry,abrunnerPath);
+			}, onretry ? 3000 : 1000);
 			return;
 		}
-		 this.loadSource(program);
-		 this._currentLine = -1;
-		 this.continue();
+		this.loadSource(program);
+		this._currentLine = -1;
+		//this.continue();
 
-		var wscmdStart={cmd:'runscript',script:_self._sourceText,refresh:true};
-		 _self.ws.send(JSON.stringify(wscmdStart));
-		 this.continue();
+		var wscmdStart = { cmd: 'runscript', script: _self._sourceText, refresh: true };
+		_self.ws.send(JSON.stringify(wscmdStart));
+		this.continue();
 
 
 
@@ -157,8 +169,8 @@ export class AspBotRuntime extends EventEmitter {
 	 * Continue execution to the end/beginning.
 	 */
 	public continue(reverse = false) {
-		var _self=this;
-		var _cmd={cmd:'continue'};
+		var _self = this;
+		var _cmd = { cmd: 'continue' };
 		_self.ws.send(JSON.stringify(_cmd));
 		//this.run(reverse, undefined);
 	}
@@ -167,21 +179,21 @@ export class AspBotRuntime extends EventEmitter {
 	 * Step to the next/previous non empty line.
 	 */
 	public step(reverse = false, event = 'stopOnStep') {
-		var _self=this;
-		var _cmd={cmd:'step'};
+		var _self = this;
+		var _cmd = { cmd: 'step' };
 		_self.ws.send(JSON.stringify(_cmd));
 		//this.run(reverse, event);
 	}
 
-	public terminate(){
-		var _self=this;
-		var _cmd={cmd:'terminate'};
+	public terminate() {
+		var _self = this;
+		var _cmd = { cmd: 'terminate' };
 		_self.ws.send(JSON.stringify(_cmd));
 	}
 
-	public pause(){
-		var _self=this;
-		var _cmd={cmd:'pause'};
+	public pause() {
+		var _self = this;
+		var _cmd = { cmd: 'pause' };
 		_self.ws.send(JSON.stringify(_cmd));
 	}
 
@@ -232,9 +244,9 @@ export class AspBotRuntime extends EventEmitter {
 	/*
 	 * Set breakpoint in file with given line.
 	 */
-	public setBreakPoint(path: string, line: number) : MockBreakpoint {
-		var _self=this;
-		const bp = <MockBreakpoint> { verified: false, line, id: this._breakpointId++ };
+	public setBreakPoint(path: string, line: number): MockBreakpoint {
+		var _self = this;
+		const bp = <MockBreakpoint>{ verified: false, line, id: this._breakpointId++ };
 		let bps = this._breakPoints.get(path);
 		if (!bps) {
 			bps = new Array<MockBreakpoint>();
@@ -244,15 +256,22 @@ export class AspBotRuntime extends EventEmitter {
 
 		this.verifyBreakpoints(path);
 
-		var wscmd={cmd:'setBreakPoint',data:bp};
-		_self.ws.send(JSON.stringify(wscmd));
+		var wscmd = { cmd: 'setBreakPoint', data: bp };
+		if (_self.ws!=undefined && (_self.ws.readyState == _self.ws.OPEN)){
+			_self.ws.send(JSON.stringify(wscmd));
+		} else {
+			setTimeout(function (){
+				_self.setBreakPoint(path,line);
+			},200);
+			return bp;
+		}
 		return bp;
 	}
 
 	/*
 	 * Clear breakpoint in file with given line.
 	 */
-	public clearBreakPoint(path: string, line: number) : MockBreakpoint | undefined {
+	public clearBreakPoint(path: string, line: number): MockBreakpoint | undefined {
 		let bps = this._breakPoints.get(path);
 		if (bps) {
 			const index = bps.findIndex(bp => bp.line === line);
@@ -295,7 +314,7 @@ export class AspBotRuntime extends EventEmitter {
 	private loadSource(file: string) {
 		if (this._sourceFile !== file) {
 			this._sourceFile = file;
-			this._sourceText=readFileSync(this._sourceFile).toString();
+			this._sourceText = readFileSync(this._sourceFile).toString();
 			this._sourceLines = this._sourceText.split('\n');
 		}
 	}
@@ -308,7 +327,7 @@ export class AspBotRuntime extends EventEmitter {
 	// 	console.log("RUN");
 	// }
 
-	private verifyBreakpoints(path: string) : void {
+	private verifyBreakpoints(path: string): void {
 		let bps = this._breakPoints.get(path);
 		if (bps) {
 			this.loadSource(path);
@@ -393,7 +412,7 @@ export class AspBotRuntime extends EventEmitter {
 	// 	return false;
 	// }
 
-	private sendEvent(event: string, ... args: any[]) {
+	private sendEvent(event: string, ...args: any[]) {
 		setImmediate(_ => {
 			this.emit(event, ...args);
 		});

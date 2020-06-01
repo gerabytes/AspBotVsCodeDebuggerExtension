@@ -1,7 +1,7 @@
 {
 	"name": "aspbot-debug",
 	"displayName": "AspBot Debug",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"publisher": "Gerabytes",
 	"description": "AspBot VsCode Debugger Extension",
 	"author": {
@@ -98,8 +98,10 @@
 						"type": "aspbot",
 						"request": "launch",
 						"name": "AspBot Debugger",
-						"program": "^\"\\${file}\"",
-						"stopOnEntry": false
+						"program": "${file}",
+						"stopOnEntry": false,
+						"websocketPort": 8898,
+						"abRunnerPath": "C:\\abdebugger\\abdebugger.exe"
 					}
 				],
 				"configurationSnippets": [
@@ -110,8 +112,10 @@
 							"type": "aspbot",
 							"request": "launch",
 							"name": "AspBot Debugger",
-							"program": "^\"\\${file}\"",
-							"stopOnEntry": true
+							"program": "${file}",
+							"stopOnEntry": true,
+							"websocketPort": 8898,
+							"abRunnerPath": "C:\\abdebugger\\abdebugger.exe"
 						}
 					}
 				],
